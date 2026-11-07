@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import logging
 from sklearn.neighbors import KNeighborsClassifier
@@ -20,6 +21,11 @@ log = logging.getLogger(__name__)
 
 RANDOM_STATE = 42
 TEST_SIZE    = 0.2
+
+# n_jobs=-1 abriria um processo por núcleo lógico (via joblib/loky); em máquinas
+# com muitos núcleos mas pouca RAM livre isso derruba os workers por falta de
+# memória. Limitamos o paralelismo a um valor seguro.
+_SAFE_N_JOBS = min(4, os.cpu_count() or 1)
 
 
 def _build_base_models(k=14, svm_c=0.1, rf_n=50, rf_depth=10):
@@ -46,7 +52,7 @@ def _find_best_k(X_train, y_train):
     grid = GridSearchCV(
         KNeighborsClassifier(),
         {'n_neighbors': list(range(1, 21))},
-        cv=cv, scoring='accuracy', n_jobs=-1
+        cv=cv, scoring='accuracy', n_jobs=_SAFE_N_JOBS
     )
     grid.fit(Xs, y_train)
     best_k = grid.best_params_['n_neighbors']
@@ -127,7 +133,7 @@ def train_and_evaluate(X, y, optimize_k=True, callback=None):
             estimators=estimadores,
             final_estimator=LogisticRegression(max_iter=1000,
                                                random_state=RANDOM_STATE),
-            cv=5, n_jobs=-1
+            cv=5, n_jobs=_SAFE_N_JOBS
         ),
     }
 
