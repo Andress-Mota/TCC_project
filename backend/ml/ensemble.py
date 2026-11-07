@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import logging
+from joblib import parallel_backend
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier, StackingClassifier
@@ -22,9 +23,12 @@ log = logging.getLogger(__name__)
 RANDOM_STATE = 42
 TEST_SIZE    = 0.2
 
-# n_jobs=-1 abriria um processo por núcleo lógico (via joblib/loky); em máquinas
-# com muitos núcleos mas pouca RAM livre isso derruba os workers por falta de
-# memória. Limitamos o paralelismo a um valor seguro.
+# n_jobs>1 com o backend padrão (loky) abre processos separados, e cada um
+# precisa reimportar os módulos do projeto — inclusive torch (via ml.cnn_model).
+# Em máquinas com pouca RAM livre isso falha dentro do worker (o mesmo erro de
+# "arquivo de paginação muito pequeno") e o joblib reporta como "falha ao
+# un-serialize", escondendo a causa real. Por isso paralelizamos com threads
+# (mesmo processo, nada para reimportar) em vez de processos.
 _SAFE_N_JOBS = min(4, os.cpu_count() or 1)
 
 
@@ -54,7 +58,8 @@ def _find_best_k(X_train, y_train):
         {'n_neighbors': list(range(1, 21))},
         cv=cv, scoring='accuracy', n_jobs=_SAFE_N_JOBS
     )
-    grid.fit(Xs, y_train)
+    with parallel_backend('threading', n_jobs=_SAFE_N_JOBS):
+        grid.fit(Xs, y_train)
     best_k = grid.best_params_['n_neighbors']
     log.info(f"  Melhor K encontrado: {best_k} (score CV: {grid.best_score_:.4f})")
     return best_k
@@ -154,8 +159,9 @@ def train_and_evaluate(X, y, optimize_k=True, callback=None):
             callback(pct, f'Treinando {nome}...')
 
         try:
-            modelo.fit(X_train, y_train)
-            scores = cross_val_score(modelo, X, y, cv=cv_10, scoring='accuracy')
+            with parallel_backend('threading', n_jobs=_SAFE_N_JOBS):
+                modelo.fit(X_train, y_train)
+                scores = cross_val_score(modelo, X, y, cv=cv_10, scoring='accuracy')
             y_pred = modelo.predict(X_test)
             cm     = confusion_matrix(y_test, y_pred)
             report = classification_report(
