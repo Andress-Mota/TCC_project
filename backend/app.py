@@ -46,6 +46,7 @@ app.secret_key = SECRET_KEY
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 CORS(app, supports_credentials=True,
+     origins=['http://localhost:5000', 'http://127.0.0.1:5000'],
      methods=['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
      allow_headers=['Content-Type', 'Authorization'])
 
@@ -56,9 +57,11 @@ try:
     from flask_limiter.util import get_remote_address
     limiter = Limiter(app=app, key_func=get_remote_address,
                       default_limits=[], storage_uri="memory://")
-    _limit_login = limiter.limit("10 per minute")
+    _limit_login  = limiter.limit("10 per minute")
+    _limit_verify = limiter.limit("10 per minute")
 except Exception:
     def _limit_login(f): return f
+    def _limit_verify(f): return f
 
 
 def login_required(f):
@@ -171,6 +174,7 @@ def register():
 
 
 @app.route('/api/auth/resend-verification', methods=['POST'])
+@_limit_verify
 def resend_verification():
     data    = request.get_json()
     user_id = data.get('user_id')
@@ -199,6 +203,7 @@ def resend_verification():
 
 
 @app.route('/api/auth/verify-email', methods=['POST'])
+@_limit_verify
 def verify_email():
     data    = request.get_json()
     user_id = data.get('user_id')
@@ -277,20 +282,18 @@ def forgot_password():
     cur.execute("SELECT id FROM users WHERE email_hash=%s", (e_hash,))
     user = cur.fetchone()
 
-    if not user:
-        cur.close(); conn.close()
-        return jsonify({'error': 'E-mail não encontrado.'}), 404
+    if user:
+        token   = secrets.token_hex(16)
+        expires = datetime.now() + timedelta(hours=1)
+        cur.execute("UPDATE users SET reset_token=%s, reset_token_expires=%s WHERE id=%s",
+                    (token, expires, user['id']))
+        conn.commit()
+        send_async(send_reset_email, email, token)
 
-    token   = secrets.token_hex(16)
-    expires = datetime.now() + timedelta(hours=1)
-    cur.execute("UPDATE users SET reset_token=%s, reset_token_expires=%s WHERE id=%s",
-                (token, expires, user['id']))
-    conn.commit()
     cur.close(); conn.close()
 
-    send_async(send_reset_email, email, token)
-
-    return jsonify({'message': 'Token enviado para seu e-mail.'})
+    # Resposta neutra: não revela se o e-mail está cadastrado ou não.
+    return jsonify({'message': 'Se o e-mail estiver cadastrado, um token foi enviado.'})
 
 
 @app.route('/api/auth/reset-password', methods=['POST'])
@@ -520,6 +523,15 @@ def pick_folder():
     path = folder.replace('/', '\\')
     return jsonify({'path': path, 'classes': _get_classes(path)})
 
+def _assert_safe_members(names, extract_dir):
+    """Impede 'zip slip'/'tar slip': bloqueia membros que escapariam de extract_dir."""
+    base = os.path.realpath(extract_dir)
+    for name in names:
+        target = os.path.realpath(os.path.join(extract_dir, name))
+        if target != base and not target.startswith(base + os.sep):
+            raise ValueError(f'Caminho inseguro no arquivo compactado: {name}')
+
+
 @app.route('/api/pick-zip', methods=['GET'])
 @login_required
 def pick_zip():
@@ -548,12 +560,16 @@ def pick_zip():
     try:
         if zipfile.is_zipfile(filepath):
             with zipfile.ZipFile(filepath, 'r') as zf:
+                _assert_safe_members(zf.namelist(), extract_dir)
                 zf.extractall(extract_dir)
         elif tarfile.is_tarfile(filepath):
             with tarfile.open(filepath) as tf:
+                _assert_safe_members(tf.getnames(), extract_dir)
                 tf.extractall(extract_dir)
         else:
             return jsonify({'error': 'Formato não suportado. Use .zip ou .tar.gz'}), 400
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': f'Erro ao extrair: {str(e)}'}), 500
 
@@ -842,8 +858,17 @@ def predict():
     session_id = request.form.get('session_id')
     model_name = request.form.get('model_name', 'Stacking')
 
-    if not session_id:
+    if not session_id or not session_id.isdigit():
         return jsonify({'error': 'session_id é obrigatório.'}), 400
+    session_id = int(session_id)
+
+    conn = get_connection()
+    cur  = conn.cursor(dictionary=True)
+    cur.execute("SELECT user_id FROM training_sessions WHERE id=%s", (session_id,))
+    row = cur.fetchone()
+    cur.close(); conn.close()
+    if not row or row['user_id'] != session['user_id']:
+        return jsonify({'error': 'Sem permissão.'}), 403
 
     pkl_path = os.path.join(MODEL_FOLDER, f'session_{session_id}.pkl')
     if not os.path.exists(pkl_path):
@@ -1163,8 +1188,17 @@ def get_gradcam():
     session_id = request.form.get('session_id')
     img_file   = request.files.get('image')
 
-    if not session_id or not img_file:
+    if not session_id or not img_file or not session_id.isdigit():
         return jsonify({'error': 'session_id e image são obrigatórios.'}), 400
+    session_id = int(session_id)
+
+    conn = get_connection()
+    cur  = conn.cursor(dictionary=True)
+    cur.execute("SELECT user_id FROM training_sessions WHERE id=%s", (session_id,))
+    row = cur.fetchone()
+    cur.close(); conn.close()
+    if not row or row['user_id'] != session['user_id']:
+        return jsonify({'error': 'Sem permissão.'}), 403
 
     if not _CNN_AVAILABLE:
         return jsonify({'error': 'CNN não disponível (torch não instalado).'}), 503

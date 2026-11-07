@@ -342,7 +342,7 @@ function renderSessionsTable(sessions) {
     const statusColor = s.status === 'completed' ? 'var(--success)' : s.status === 'error' ? 'var(--error)' : 'var(--gold)';
     const statusLabel = s.status === 'completed' ? 'Concluída' : s.status === 'error' ? 'Erro' : 'Pendente';
     const nameHtml    = s.name
-      ? `<strong>#${s.id}</strong> <span style="color:var(--text-muted);font-size:12px">— ${s.name}</span>`
+      ? `<strong>#${s.id}</strong> <span style="color:var(--text-muted);font-size:12px">— ${escHtml(s.name)}</span>`
       : `<strong>#${s.id}</strong>`;
     return `<tr>
       <td>${nameHtml}</td>
@@ -357,9 +357,9 @@ function renderPredsTable(preds) {
   const tbody = document.getElementById('dash-preds-body');
   if (!preds.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);text-align:center">Nenhuma predição</td></tr>'; return; }
   tbody.innerHTML = preds.map(p => `<tr>
-    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.image_name}">${p.image_name}</td>
-    <td style="color:var(--text-muted)">${p.model_name}</td>
-    <td><strong>${p.predicted_class}</strong></td>
+    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.image_name)}">${escHtml(p.image_name)}</td>
+    <td style="color:var(--text-muted)">${escHtml(p.model_name)}</td>
+    <td><strong>${escHtml(p.predicted_class)}</strong></td>
     <td style="color:var(--success)">${p.confidence?.toFixed(1)}%</td>
   </tr>`).join('');
 }
@@ -1059,7 +1059,7 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
         const bg = isNormal ? 'var(--success)' : 'var(--error)';
         return `<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:${bg}18;border:1px solid ${bg};font-size:13px;font-weight:600">
           <span style="width:9px;height:9px;border-radius:50%;background:${bg};display:inline-block"></span>
-          ${cls}: ${n} imagem(ns)
+          ${escHtml(cls)}: ${n} imagem(ns)
         </span>`;
       }).join('');
 
@@ -1078,9 +1078,9 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
 
         const thumbCell = thumbSrc
           ? `<td style="padding:4px 8px">
-               <img src="${thumbSrc}" title="${basename}" alt="${basename}"
+               <img src="${thumbSrc}" title="${escHtml(basename)}" alt="${escHtml(basename)}"
                  style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:zoom-in;border:1px solid var(--border)"
-                 onclick="openLightbox('${thumbSrc}','${basename.replace(/'/g,"\\'")}')"/>
+                 onclick="openLightbox('${thumbSrc}','${jsAttr(basename)}')"/>
              </td>`
           : `<td style="padding:4px 8px;color:var(--text-muted);font-size:18px;text-align:center">
                <i class="bi bi-image" title="Imagem não disponível"></i>
@@ -1089,7 +1089,7 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
         const gcamCell = hasCnn
           ? `<td style="text-align:center">
                <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px"
-                 onclick="openBatchGradCAM('${imgName.replace(/'/g,"\\'")}')">
+                 onclick="openBatchGradCAM('${jsAttr(imgName)}')">
                  <i class="bi bi-eye-fill"></i>
                </button>
              </td>`
@@ -1097,10 +1097,10 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
 
         return `<tr>
           ${thumbCell}
-          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${imgName}">${basename}</td>
-          <td><strong style="color:${classColor}">${r.predicted_class}</strong></td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(imgName)}">${escHtml(basename)}</td>
+          <td><strong style="color:${classColor}">${escHtml(r.predicted_class)}</strong></td>
           <td>${r.confidence}%</td>
-          <td style="color:var(--text-muted)">${r.model}</td>
+          <td style="color:var(--text-muted)">${escHtml(r.model)}</td>
           ${_buildBatchFeedbackCell(r.prediction_id, r)}
           ${gcamCell}
         </tr>`;
@@ -1163,13 +1163,13 @@ async function loadHistPredictions(sid, page = 1) {
         if (p.feedback === 'correct') {
           fbHtml = '<span style="color:var(--success);font-weight:700"><i class="bi bi-check-lg"></i> Correto</span>';
         } else if (p.feedback === 'incorrect') {
-          const cc = p.correct_class ? ` (${p.correct_class})` : '';
+          const cc = p.correct_class ? ` (${escHtml(p.correct_class)})` : '';
           fbHtml = `<span style="color:var(--error);font-weight:700"><i class="bi bi-x-lg"></i> Errado${cc}</span>`;
         }
         tbody.innerHTML += `<tr>
-          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.image_name}">${p.image_name}</td>
-          <td style="color:var(--text-muted)">${p.model_name}</td>
-          <td><strong>${p.predicted_class}</strong></td>
+          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.image_name)}">${escHtml(p.image_name)}</td>
+          <td style="color:var(--text-muted)">${escHtml(p.model_name)}</td>
+          <td><strong>${escHtml(p.predicted_class)}</strong></td>
           <td style="color:var(--success)">${(p.confidence * 100).toFixed(1)}%</td>
           <td>${fbHtml}</td>
           <td style="color:var(--text-muted);white-space:nowrap">${fmtBR(p.created_at)}</td>
@@ -1208,7 +1208,7 @@ function _initFeedback(classes, sessionId) {
 
   // Popula o select de classe correta
   const sel = document.getElementById('correct-class-select');
-  sel.innerHTML = _currentClasses.map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.innerHTML = _currentClasses.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
 }
 
 function _resetSingleFeedback() {
@@ -1253,7 +1253,7 @@ async function submitSingleFeedback(type) {
       done.innerHTML = '<i class="bi bi-check-circle-fill" style="color:var(--success)"></i> Obrigado! Feedback registrado.' + editBtn;
     } else {
       done.innerHTML = `<i class="bi bi-exclamation-circle-fill" style="color:var(--error)"></i> `
-                     + `Registrado como incorreto. Classe correta: <strong>${correctClass}</strong>` + editBtn;
+                     + `Registrado como incorreto. Classe correta: <strong>${escHtml(correctClass)}</strong>` + editBtn;
       _incorrectSubmitted = true;
       _showAugmentSection();
     }
@@ -1280,7 +1280,7 @@ async function submitBatchFeedback(predId, type, correctClass, rowEl) {
       cell.innerHTML = '<span style="color:var(--success);font-weight:700"><i class="bi bi-check-lg"></i> Correto</span>';
     } else {
       cell.innerHTML = `<span style="color:var(--error);font-weight:700"><i class="bi bi-x-lg"></i> Errado`
-                     + (correctClass ? ` (${correctClass})` : '') + `</span>`;
+                     + (correctClass ? ` (${escHtml(correctClass)})` : '') + `</span>`;
       _incorrectSubmitted = true;
       _showAugmentSection();
     }
@@ -1292,7 +1292,7 @@ async function submitBatchFeedback(predId, type, correctClass, rowEl) {
 function _buildBatchFeedbackCell(predId, row) {
   if (!_currentClasses.length) return '<td class="batch-feedback-cell">—</td>';
 
-  const opts = _currentClasses.map(c => `<option value="${c}">${c}</option>`).join('');
+  const opts = _currentClasses.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
   return `<td class="batch-feedback-cell" style="white-space:nowrap">
     <button class="btn-feedback btn-feedback-ok" style="padding:3px 10px;font-size:12px"
             onclick="submitBatchFeedback(${predId},'correct',null,this.closest('tr'))">
@@ -1633,7 +1633,7 @@ async function openBatchGradCAM(imgName) {
     }
     document.getElementById('bgcam-img').src = `data:image/jpeg;base64,${data.image_b64}`;
     document.getElementById('bgcam-pred').innerHTML =
-      `CNN prediz: <strong>${data.pred_class}</strong> com <strong>${data.confidence}%</strong> de confiança.`;
+      `CNN prediz: <strong>${escHtml(data.pred_class)}</strong> com <strong>${data.confidence}%</strong> de confiança.`;
     show('bgcam-result');
   } catch {
     const el = document.getElementById('bgcam-error');
@@ -1678,7 +1678,7 @@ async function loadGradCAM() {
 
     document.getElementById('gradcam-img').src = `data:image/jpeg;base64,${data.image_b64}`;
     document.getElementById('gradcam-pred').innerHTML =
-      `CNN prediz: <strong>${data.pred_class}</strong> com <strong>${data.confidence}%</strong> de confiança.`;
+      `CNN prediz: <strong>${escHtml(data.pred_class)}</strong> com <strong>${data.confidence}%</strong> de confiança.`;
     show('gradcam-result');
     btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Atualizar Grad-CAM';
   } catch {
@@ -1735,6 +1735,11 @@ document.getElementById('lightbox').addEventListener('wheel', e => {
 function escHtml(str) {
   return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Escapa para uso dentro de onclick="...('${jsAttr(x)}')": HTML-safe e com aspas simples neutralizadas.
+function jsAttr(str) {
+  return escHtml(str).replace(/'/g, "\\'");
 }
 
 // Converte ISO date string para DD/MM/AAAA HH:MM
