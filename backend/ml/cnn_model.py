@@ -15,8 +15,9 @@ try:
     from torch.utils.data import DataLoader, Subset
     from torchvision.datasets import ImageFolder
     _TORCH_OK = True
-except ImportError:
+except Exception as _torch_import_err:
     _TORCH_OK = False
+    log.warning(f"torch/torchvision não pôde ser carregado: {_torch_import_err}")
 
 _DEVICE = 'cpu'
 if _TORCH_OK:

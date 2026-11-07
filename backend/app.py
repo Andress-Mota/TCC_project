@@ -35,9 +35,9 @@ from ml.ensemble import train_and_evaluate, predict_image
 try:
     from ml.cnn_model import train_cnn, save_cnn, gradcam_overlay
     _CNN_AVAILABLE = True
-except ImportError:
+except Exception as _cnn_import_err:
     _CNN_AVAILABLE = False
-    log.warning("torch/torchvision não instalado — CNN/Grad-CAM desabilitada")
+    log.warning(f"torch/torchvision indisponível — CNN/Grad-CAM desabilitada ({_cnn_import_err})")
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
