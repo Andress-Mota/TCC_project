@@ -18,7 +18,7 @@ _MONO = (
 def _send(to: str, subject: str, html: str):
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
-    msg['From']    = f'TCC IA <{GMAIL_SENDER}>'
+    msg['From']    = f'Cabeça do Andress <{GMAIL_SENDER}>'
     msg['To']      = to
     msg.attach(MIMEText(html, 'html', 'utf-8'))
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as smtp:
@@ -31,7 +31,7 @@ def send_verification_email(to: str, code: str):
     <div style="{_CARD}">
       <h2 style="color:#5B8CFF;margin:0 0 8px">Verificação de E-mail</h2>
       <p style="color:#9BA7C2;margin:0 0 20px">
-        Use o código abaixo para ativar sua conta no sistema <strong>TCC IA</strong>.
+        Use o código abaixo para ativar sua conta no sistema <strong>Cabeça do Andress</strong>.
       </p>
       <div style="{_MONO}">
         <span style="font-family:monospace;font-size:34px;font-weight:800;
@@ -42,7 +42,7 @@ def send_verification_email(to: str, code: str):
       </p>
     </div>"""
     try:
-        _send(to, 'TCC IA — Código de verificação', html)
+        _send(to, 'Cabeça do Andress — Código de verificação', html)
     except Exception as e:
         print(f"\n{'='*50}")
         print(f"[MAIL] Falha ao enviar e-mail para {to}: {e}")
@@ -55,7 +55,7 @@ def send_reset_email(to: str, token: str):
     <div style="{_CARD}">
       <h2 style="color:#5B8CFF;margin:0 0 8px">Recuperação de Senha</h2>
       <p style="color:#9BA7C2;margin:0 0 20px">
-        Use o token abaixo para redefinir sua senha no sistema <strong>TCC IA</strong>.
+        Use o token abaixo para redefinir sua senha no sistema <strong>Cabeça do Andress</strong>.
       </p>
       <div style="{_MONO}">
         <span style="font-family:monospace;font-size:13px;font-weight:700;
@@ -66,7 +66,7 @@ def send_reset_email(to: str, token: str):
       </p>
     </div>"""
     try:
-        _send(to, 'TCC IA — Token de recuperação de senha', html)
+        _send(to, 'Cabeça do Andress — Token de recuperação de senha', html)
     except Exception as e:
         print(f"\n{'='*50}")
         print(f"[MAIL] Falha ao enviar e-mail para {to}: {e}")

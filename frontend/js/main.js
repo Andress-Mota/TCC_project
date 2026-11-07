@@ -1039,8 +1039,8 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
       _batchFileMap = fileMap;
       _batchSessId  = parseInt(sid);
 
-      // Classe "normal" é a que contém "normal" no nome (case-insensitive)
-      const normalClass = classes.find(c => /normal/i.test(c)) || classes[0] || '';
+      // Classe "normal"/saudável é a que contém "normal", "no_tumor" ou "sem_tumor" no nome
+      const normalClass = classes.find(c => /normal|no[-_]?tumor|sem[-_]?tumor/i.test(c)) || classes[0] || '';
 
       // Positivos (achados) primeiro; dentro de cada grupo, maior confiança primeiro
       const sorted = [...rows].sort((a, b) => {
@@ -1055,7 +1055,7 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
       rows.forEach(r => { counts[r.predicted_class] = (counts[r.predicted_class] || 0) + 1; });
       const summaryEl = document.getElementById('batch-summary');
       summaryEl.innerHTML = Object.entries(counts).map(([cls, n]) => {
-        const isNormal = /normal/i.test(cls);
+        const isNormal = /normal|no[-_]?tumor|sem[-_]?tumor/i.test(cls);
         const bg = isNormal ? 'var(--success)' : 'var(--error)';
         return `<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:${bg}18;border:1px solid ${bg};font-size:13px;font-weight:600">
           <span style="width:9px;height:9px;border-radius:50%;background:${bg};display:inline-block"></span>
@@ -1071,7 +1071,7 @@ document.getElementById('btn-predict').addEventListener('click', async () => {
       tbody.innerHTML = sorted.map(r => {
         const imgName    = r.image || r.image_name || r.filename || '—';
         const basename   = imgName.split('/').pop().split('\\').pop();
-        const isNormal   = /normal/i.test(r.predicted_class);
+        const isNormal   = /normal|no[-_]?tumor|sem[-_]?tumor/i.test(r.predicted_class);
         const classColor = isNormal ? 'var(--success)' : 'var(--error)';
         const file       = fileMap[imgName] || fileMap[basename];
         const thumbSrc   = file ? URL.createObjectURL(file) : null;

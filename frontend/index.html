@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TCC — Classificação de Imagens com Ensemble</title>
+  <title>Cabeça do Andress — Detecção de Tumor Cerebral</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/style.css?v=21" />
@@ -23,8 +23,8 @@
   <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h1>TCC <span>IA</span></h1>
-      <p>Classificação de Imagens</p>
+      <h1>Cabeça do <span>Andress</span></h1>
+      <p>Detecção de Tumor Cerebral</p>
     </div>
     <nav>
       <button class="nav-btn active" data-page="dashboard">
@@ -70,7 +70,7 @@
 
   <!-- ── HEADER MOBILE ───────────────────────────────────────── -->
   <header class="mobile-header">
-    <h1>TCC <span>IA</span></h1>
+    <h1>Cabeça do <span>Andress</span></h1>
     <div class="mobile-header-actions">
       <button class="theme-btn" id="theme-toggle-mobile">
         <i class="bi bi-sun-fill" id="theme-icon-mobile"></i>
@@ -88,7 +88,7 @@
     <section id="page-dashboard" class="page active">
       <div class="page-header">
         <h2>Dashboard</h2>
-        <p>Visão geral de todos os resultados e atividades do sistema.</p>
+        <p>Visão geral das análises e resultados de detecção de tumor cerebral.</p>
       </div>
 
       <!-- CARDS DE MÉTRICAS -->
@@ -198,8 +198,9 @@
             </div>
             <div id="extract-status" class="extract-status hidden"></div>
             <p class="hint" id="dataset-classes-hint">
-              A pasta deve conter subpastas por classe:<br/>
-              <code>dataset/classe_a/</code> e <code>dataset/classe_b/</code>
+              A pasta deve conter subpastas por classe, ex:<br/>
+              <code>glioma_tumor/</code>, <code>meningioma_tumor/</code>,
+              <code>no_tumor/</code>, <code>pituitary_tumor/</code>
             </p>
             <label class="field-label" style="margin-top:8px">Nome do treinamento <small style="color:var(--text-muted);text-transform:none;font-weight:400">(opcional)</small></label>
             <input id="train-session-name" type="text" placeholder="Ex: Teste com radiografias — base UCI" style="margin-bottom:16px" />
@@ -318,7 +319,8 @@
     <!-- TESTAR -->
     <section id="page-testar" class="page">
       <div class="page-header">
-        <h2>Testar Nova Imagem</h2>
+        <h2>Analisar Ressonância</h2>
+        <p>Envie uma imagem de ressonância magnética para detectar tumor cerebral.</p>
       </div>
 
       <div class="card">

@@ -1,5 +1,5 @@
 -- =============================================================
---  TCC — Classificação de Imagens com Ensemble Learning
+--  Cabeça do Andress — Detecção de Tumor Cerebral por Imagem
 --  Banco de dados: tcc_imagens
 --
 --  Como executar no MySQL Workbench:
