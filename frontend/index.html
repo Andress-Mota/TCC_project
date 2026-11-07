@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TCC — Classificação de Imagens com Ensemble</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css?v=21" />
+  <script>
+    // Aplica tema ANTES de renderizar para evitar flash
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === null) {
+        document.documentElement.classList.add('light');
+      }
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>TCC <span>IA</span></h1>
+      <p>Classificação de Imagens</p>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-page="dashboard">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </button>
+      <button class="nav-btn" data-page="treinar">
+        <i class="bi bi-cpu-fill"></i> Treinar
+      </button>
+      <button class="nav-btn" data-page="resultados">
+        <i class="bi bi-bar-chart-fill"></i> Resultados
+      </button>
+      <button class="nav-btn" data-page="testar">
+        <i class="bi bi-image-fill"></i> Testar Imagem
+      </button>
+      <button class="nav-btn" data-page="historico">
+        <i class="bi bi-clock-history"></i> Histórico
+      </button>
+      <button class="nav-btn" data-page="logs">
+        <i class="bi bi-exclamation-triangle-fill"></i> Logs
+      </button>
+      <button class="nav-btn" data-page="perfil">
+        <i class="bi bi-person-fill"></i> Perfil
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="bi bi-person-circle"></i>
+        <span id="user-name">...</span>
+      </div>
+      <button class="theme-btn" id="theme-toggle">
+        <i class="bi bi-sun-fill" id="theme-icon"></i>
+        <span id="theme-label">Modo Claro</span>
+      </button>
+      <button class="nav-btn" id="btn-change-password">
+        <i class="bi bi-key-fill"></i> Trocar Senha
+      </button>
+      <button class="nav-btn danger" id="btn-logout">
+        <i class="bi bi-box-arrow-right"></i> Sair
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── HEADER MOBILE ───────────────────────────────────────── -->
+  <header class="mobile-header">
+    <h1>TCC <span>IA</span></h1>
+    <div class="mobile-header-actions">
+      <button class="theme-btn" id="theme-toggle-mobile">
+        <i class="bi bi-sun-fill" id="theme-icon-mobile"></i>
+      </button>
+      <button class="mobile-logout-btn" id="btn-logout-mobile">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MAIN ────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p>Visão geral de todos os resultados e atividades do sistema.</p>
+      </div>
+
+      <!-- CARDS DE MÉTRICAS -->
+      <div class="dash-cards">
+        <div class="dash-card">
+          <div class="dash-card-icon" style="background:rgba(91,140,255,.15)">
+            <i class="bi bi-cpu-fill" style="color:var(--accent)"></i>
+          </div>
+          <div>
+            <div class="dash-card-value" id="dash-sessions">—</div>
+            <div class="dash-card-label">Sessões concluídas</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon" style="background:rgba(57,198,180,.15)">
+            <i class="bi bi-image-fill" style="color:var(--success)"></i>
+          </div>
+          <div>
+            <div class="dash-card-value" id="dash-predictions">—</div>
+            <div class="dash-card-label">Predições realizadas</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon" style="background:rgba(217,182,107,.15)">
+            <i class="bi bi-trophy-fill" style="color:var(--gold)"></i>
+          </div>
+          <div>
+            <div class="dash-card-value" id="dash-best-acc">—</div>
+            <div class="dash-card-label">Melhor acurácia</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon" style="background:rgba(255,122,89,.15)">
+            <i class="bi bi-stars" style="color:var(--error)"></i>
+          </div>
+          <div>
+            <div class="dash-card-value" id="dash-best-model">—</div>
+            <div class="dash-card-label">Modelo destaque</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRÁFICO -->
+      <div class="card">
+        <h3><i class="bi bi-bar-chart-fill"></i> Acurácia média por modelo</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
+          Média de CV 10-fold e acurácia de teste em todas as sessões concluídas.
+        </p>
+        <canvas id="dash-chart" style="max-height:300px"></canvas>
+      </div>
+
+      <!-- TABELAS -->
+      <div class="dash-tables">
+        <div class="card">
+          <h3><i class="bi bi-clock-history"></i> Últimas sessões</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Imagens</th>
+                <th>Status</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="dash-sessions-body"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3><i class="bi bi-lightning-fill"></i> Últimas predições</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Imagem</th>
+                <th>Modelo</th>
+                <th>Classe</th>
+                <th>Conf.</th>
+              </tr>
+            </thead>
+            <tbody id="dash-preds-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TREINAR -->
+    <section id="page-treinar" class="page">
+      <div class="page-header">
+        <h2>Treinar Modelos</h2>
+        <p>Informe o caminho do dataset e inicie o treinamento.</p>
+      </div>
+
+      <div class="treinar-layout">
+
+        <!-- Coluna esquerda: formulário + progresso -->
+        <div class="treinar-main">
+          <div class="card">
+            <label class="field-label">Caminho do dataset</label>
+            <div class="dataset-path-row">
+              <input id="dataset-path" type="text"
+                     placeholder="Ex: C:\Users\andre\Documents\dataset" />
+              <button id="btn-browse" class="btn btn-secondary" type="button">
+                <i class="bi bi-folder2-open"></i> Pasta
+              </button>
+              <button id="btn-import-zip" class="btn btn-secondary" type="button">
+                <i class="bi bi-file-zip"></i> .zip / .tar
+              </button>
+            </div>
+            <div id="extract-status" class="extract-status hidden"></div>
+            <p class="hint" id="dataset-classes-hint">
+              A pasta deve conter subpastas por classe:<br/>
+              <code>dataset/classe_a/</code> e <code>dataset/classe_b/</code>
+            </p>
+            <label class="field-label" style="margin-top:8px">Nome do treinamento <small style="color:var(--text-muted);text-transform:none;font-weight:400">(opcional)</small></label>
+            <input id="train-session-name" type="text" placeholder="Ex: Teste com radiografias — base UCI" style="margin-bottom:16px" />
+            <label class="cnn-checkbox-label">
+              <input type="checkbox" id="train-cnn-checkbox" />
+              <div class="cnn-checkbox-text">
+                <strong><i class="bi bi-eye-fill" style="color:var(--accent)"></i> Incluir CNN (EfficientNet-B0 + Grad-CAM)</strong>
+                <span>Habilita visualização de onde o modelo "vê" na imagem. Requer mais tempo de treino.</span>
+              </div>
+            </label>
+            <button id="btn-train" class="btn btn-primary" style="margin-top:12px">Iniciar Treinamento</button>
+          </div>
+
+          <div id="train-progress-box" class="card hidden">
+            <div class="progress-header">
+              <span id="train-status-msg">Aguardando...</span>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span id="train-pct">0%</span>
+                <button id="btn-cancel-train" class="btn-cancel-train">Cancelar</button>
+              </div>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="train-progress-bar" class="progress-bar-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div id="train-success" class="card success-box hidden">
+            <h3>Treinamento concluído!</h3>
+            <p id="train-success-msg"></p>
+            <button class="btn btn-secondary" onclick="goTo('resultados')">
+              Ver Resultados
+            </button>
+          </div>
+        </div>
+
+        <!-- Coluna direita: card de etapas -->
+        <div class="card train-steps-card" id="train-steps-card">
+          <div class="train-steps-header">
+            <h3><i class="bi bi-list-check"></i> Etapas do treinamento</h3>
+            <span id="train-steps-status-badge" class="train-steps-badge">Aguardando</span>
+          </div>
+          <div id="train-steps-list" class="train-steps-list"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RESULTADOS -->
+    <section id="page-resultados" class="page">
+      <div class="page-header">
+        <h2>Resultados Comparativos</h2>
+      </div>
+
+      <div class="card">
+        <label class="field-label">Selecionar sessão de treino</label>
+        <div class="session-select-row">
+          <select id="result-session-select">
+            <option value="">-- carregando sessões --</option>
+          </select>
+          <button class="btn-rename-session" title="Renomear sessão" onclick="openRenameModal('result-session-select')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+          <button class="btn-delete-session" title="Excluir sessão" onclick="confirmDeleteSession('result-session-select')">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+        </div>
+        <button id="btn-load-results" class="btn btn-primary" style="margin-top:12px">Carregar</button>
+      </div>
+
+      <div id="results-content" class="hidden">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="margin:0">Comparativo de Modelos</h3>
+            <button id="btn-export-csv" class="btn btn-secondary" style="font-size:12px;padding:6px 14px">
+              <i class="bi bi-download"></i> Exportar CSV
+            </button>
+          </div>
+          <table id="results-table" class="data-table">
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th>Tipo</th>
+                <th>CV 10-fold</th>
+                <th>Acurácia</th>
+                <th>Precisão</th>
+                <th>Recall</th>
+                <th>F1-Score</th>
+                <th>ROC AUC</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Curva ROC</h3>
+          <label class="field-label">Selecionar modelo</label>
+          <select id="roc-model-select"></select>
+          <canvas id="roc-chart" style="max-height:300px;margin-top:16px"></canvas>
+        </div>
+
+        <div class="card">
+          <h3>Gráfico Comparativo</h3>
+          <canvas id="results-chart" height="100"></canvas>
+        </div>
+
+        <div class="card">
+          <h3>Matriz de Confusão</h3>
+          <label class="field-label">Selecionar modelo</label>
+          <select id="cm-model-select"></select>
+          <div id="confusion-matrix-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTAR -->
+    <section id="page-testar" class="page">
+      <div class="page-header">
+        <h2>Testar Nova Imagem</h2>
+      </div>
+
+      <div class="card">
+        <label class="field-label">Sessão de treino</label>
+        <div class="session-select-row">
+          <select id="test-session-select">
+            <option value="">-- selecione --</option>
+          </select>
+          <button class="btn-rename-session" title="Renomear sessão" onclick="openRenameModal('test-session-select')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+          <button class="btn-delete-session" title="Excluir sessão" onclick="confirmDeleteSession('test-session-select')">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+        </div>
+
+        <label class="field-label" style="margin-top:16px">Modelo</label>
+        <select id="test-model-select">
+          <option value="Stacking">Stacking (recomendado)</option>
+          <option value="Voting Soft">Voting Soft</option>
+          <option value="Voting Hard">Voting Hard</option>
+          <option value="Random Forest">Random Forest</option>
+          <option value="SVM">SVM</option>
+          <option value="KNN">KNN</option>
+        </select>
+
+        <label class="field-label" style="margin-top:16px">Imagens para teste</label>
+        <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+          <div class="upload-area" id="upload-area" style="flex:1;min-width:220px">
+            <input type="file" id="test-image-input" accept="image/*" multiple />
+            <input type="file" id="test-folder-input" accept="image/*" webkitdirectory style="display:none" />
+            <p><i class="bi bi-cloud-upload-fill"></i> Clique ou arraste imagens aqui</p>
+            <p style="font-size:12px;margin-top:4px">Selecione arquivos individuais ou múltiplos</p>
+          </div>
+          <button class="btn btn-secondary" id="btn-pick-folder" title="Selecionar pasta com imagens" style="align-self:stretch;white-space:nowrap">
+            <i class="bi bi-folder2-open"></i> Selecionar pasta
+          </button>
+        </div>
+        <div id="selected-count" style="font-size:12px;color:var(--text-muted);margin-top:6px;display:none"></div>
+        <div id="preview-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"></div>
+
+        <button id="btn-predict" class="btn btn-primary" style="margin-top:16px">
+          <i class="bi bi-lightning-fill"></i> Classificar
+        </button>
+      </div>
+
+      <div id="predict-result" class="card result-box hidden">
+        <h3>Resultado da Classificação</h3>
+        <div class="result-img-row">
+          <img id="result-image-preview" src="" alt="Imagem classificada"
+               class="result-img-thumb hidden"
+               onclick="openLightbox(this.src,'Imagem classificada')" />
+          <div class="result-text-col">
+            <div class="result-class" id="result-class-name"></div>
+            <div class="result-confidence">Confiança: <strong id="result-confidence"></strong></div>
+            <div class="result-model">Modelo: <em id="result-model-name"></em></div>
+          </div>
+        </div>
+
+        <div class="feedback-section" id="feedback-single">
+          <p class="feedback-question"><i class="bi bi-patch-question-fill"></i> O modelo acertou?</p>
+          <div class="feedback-btns">
+            <button class="btn-feedback btn-feedback-ok" id="btn-fb-correct" onclick="submitSingleFeedback('correct')">
+              <i class="bi bi-check-lg"></i> Acertou
+            </button>
+            <button class="btn-feedback btn-feedback-err" id="btn-fb-incorrect" onclick="showWrongPicker()">
+              <i class="bi bi-x-lg"></i> Errou
+            </button>
+          </div>
+          <div id="wrong-class-picker" class="wrong-class-picker hidden">
+            <label class="field-label" style="margin-bottom:6px">Qual era a classe correta?</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="correct-class-select"></select>
+              <button class="btn btn-primary" style="flex-shrink:0;padding:8px 18px"
+                      onclick="submitSingleFeedback('incorrect')">
+                Confirmar
+              </button>
+            </div>
+          </div>
+          <div id="feedback-single-done" class="feedback-done hidden"></div>
+        </div>
+
+        <div id="gradcam-section" class="gradcam-section hidden">
+          <button class="btn btn-secondary" id="btn-show-gradcam" onclick="loadGradCAM()">
+            <i class="bi bi-eye-fill"></i> Ver análise visual (Grad-CAM)
+          </button>
+          <div id="gradcam-loading" class="hidden" style="margin-top:10px;color:var(--text-muted);font-size:13px">
+            <span class="spinner"></span> Gerando mapa de atenção CNN...
+          </div>
+          <div id="gradcam-error" class="hidden" style="margin-top:10px;font-size:13px;color:var(--error)"></div>
+          <div id="gradcam-result" class="gradcam-result hidden">
+            <div class="gradcam-legend">
+              <i class="bi bi-map-fill" style="color:var(--accent)"></i>
+              <strong>Mapa de Atenção CNN (EfficientNet-B0)</strong>
+              <span style="color:var(--text-muted);font-size:12px">Regiões quentes = onde o modelo focou para decidir</span>
+            </div>
+            <img id="gradcam-img" src="" alt="Grad-CAM"
+                 class="gradcam-img"
+                 onclick="openLightbox(this.src,'Grad-CAM — Mapa de atenção')" />
+            <div id="gradcam-pred" class="gradcam-pred"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="predict-batch" class="card result-box hidden">
+        <h3><i class="bi bi-grid-fill"></i> Resultados em Lote</h3>
+        <div id="batch-summary" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <table class="data-table" id="batch-table">
+          <thead><tr><th></th><th>Imagem</th><th>Classe Predita</th><th>Confiança</th><th>Modelo</th><th>Feedback</th><th id="batch-th-gradcam" class="hidden">Grad-CAM</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="augment-section" class="card hidden">
+        <h3><i class="bi bi-arrow-repeat"></i> Retreinar com Feedback</h3>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">
+          Exemplos marcados como incorretos serão adicionados ao conjunto de treino para melhorar o modelo.
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="augment-name" type="text" placeholder="Nome para a nova sessão (opcional)"
+                 style="flex:1;min-width:220px" />
+          <button class="btn btn-primary" id="btn-augment-train">
+            <i class="bi bi-cpu-fill"></i> Iniciar Retreino
+          </button>
+        </div>
+        <div id="augment-status" class="hidden" style="margin-top:10px;font-size:13px;color:var(--success)"></div>
+      </div>
+    </section>
+
+    <!-- PERFIL -->
+    <section id="page-perfil" class="page">
+      <div class="page-header">
+        <h2>Meu Perfil</h2>
+        <p>Visualize e edite suas informações.</p>
+      </div>
+
+      <div class="card profile-card">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <div class="profile-meta">
+          <div class="profile-name" id="profile-display-name">—</div>
+          <div class="profile-email" id="profile-display-email">—</div>
+          <div id="profile-verified-badge" class="badge hidden"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Editar informações</h3>
+        <div class="field">
+          <label class="field-label">Nome</label>
+          <input id="profile-name" type="text" placeholder="Seu nome" />
+        </div>
+        <div class="field">
+          <label class="field-label">E-mail <small style="color:var(--text-muted)">(alterar exige nova verificação)</small></label>
+          <input id="profile-email" type="email" placeholder="seu@email.com" />
+        </div>
+        <div id="profile-error"   class="modal-msg modal-error   hidden"></div>
+        <div id="profile-success" class="modal-msg modal-success hidden"></div>
+        <button class="btn btn-primary" id="btn-save-profile">
+          <i class="bi bi-floppy-fill"></i> Salvar alterações
+        </button>
+      </div>
+
+      <div class="card">
+        <h3>Segurança</h3>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+          Membro desde: <span id="profile-since">—</span>
+        </p>
+        <button class="btn btn-secondary" id="btn-open-change-pwd">
+          <i class="bi bi-key-fill"></i> Trocar Senha
+        </button>
+      </div>
+    </section>
+
+    <!-- LOGS DE ERRO -->
+    <section id="page-logs" class="page">
+      <div class="page-header">
+        <h2>Logs de Erros</h2>
+        <p>Registro de falhas e erros capturados pelo sistema.</p>
+      </div>
+
+      <div class="card">
+        <div class="logs-toolbar">
+          <div class="logs-toolbar-filters">
+            <select id="logs-filter-level">
+              <option value="">Todos os níveis</option>
+              <option value="ERROR">ERROR</option>
+              <option value="WARNING">WARNING</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+            <select id="logs-filter-origin">
+              <option value="">Todas as origens</option>
+              <option value="treinamento">Treinamento</option>
+              <option value="predicao">Predição</option>
+              <option value="autenticacao">Autenticação</option>
+              <option value="sistema">Sistema</option>
+              <option value="perfil">Perfil</option>
+            </select>
+            <button class="btn btn-secondary" id="btn-load-logs">
+              <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+          </div>
+          <button class="btn btn-danger" id="btn-clear-logs">
+            <i class="bi bi-trash-fill"></i> Limpar tudo
+          </button>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nível</th>
+              <th>Origem</th>
+              <th>Mensagem</th>
+              <th>Sessão</th>
+              <th>Data/Hora</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="logs-body"></tbody>
+        </table>
+
+        <div class="logs-pagination" id="logs-pagination"></div>
+      </div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section id="page-historico" class="page">
+      <div class="page-header">
+        <h2>Histórico de Predições</h2>
+      </div>
+
+      <div class="card">
+        <label class="field-label">Sessão</label>
+        <div class="session-select-row">
+          <select id="hist-session-select">
+            <option value="">-- selecione --</option>
+          </select>
+          <button class="btn-rename-session" title="Renomear sessão" onclick="openRenameModal('hist-session-select')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+          <button class="btn-delete-session" title="Excluir sessão" onclick="confirmDeleteSession('hist-session-select')">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+        </div>
+        <button id="btn-load-hist" class="btn btn-primary" style="margin-top:12px">Carregar</button>
+      </div>
+
+      <div class="card hidden" id="hist-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Predições <span id="hist-total-count" style="color:var(--text-muted);font-size:13px;font-weight:400"></span></h3>
+          <button id="btn-export-pred-csv" class="btn btn-secondary" style="font-size:12px;padding:6px 14px">
+            <i class="bi bi-download"></i> Exportar CSV
+          </button>
+        </div>
+        <table class="data-table" id="hist-table">
+          <thead>
+            <tr>
+              <th>Imagem</th>
+              <th>Modelo</th>
+              <th>Classe Predita</th>
+              <th>Confiança</th>
+              <th>Feedback</th>
+              <th>Data/Hora</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="hist-pagination" class="logs-pagination"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── BARRA INFERIOR (mobile) ──────────────────────────── -->
+  <nav class="bottom-nav">
+    <button class="bottom-nav-btn active" data-page="dashboard">
+      <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+    </button>
+    <button class="bottom-nav-btn" data-page="treinar">
+      <i class="bi bi-cpu-fill"></i><span>Treinar</span>
+    </button>
+    <button class="bottom-nav-btn" data-page="resultados">
+      <i class="bi bi-bar-chart-fill"></i><span>Resultados</span>
+    </button>
+    <button class="bottom-nav-btn" data-page="testar">
+      <i class="bi bi-image-fill"></i><span>Testar</span>
+    </button>
+    <button class="bottom-nav-btn" data-page="historico">
+      <i class="bi bi-clock-history"></i><span>Histórico</span>
+    </button>
+    <button class="bottom-nav-btn" data-page="logs">
+      <i class="bi bi-exclamation-triangle-fill"></i><span>Logs</span>
+    </button>
+    <button class="bottom-nav-btn" data-page="perfil">
+      <i class="bi bi-person-fill"></i><span>Perfil</span>
+    </button>
+  </nav>
+
+  <!-- MODAL TROCA DE SENHA -->
+  <div id="modal-change-pwd" class="modal-overlay hidden">
+    <div class="modal-box">
+
+      <div class="modal-header">
+        <h3><i class="bi bi-shield-lock-fill"></i> Trocar Senha</h3>
+        <button class="modal-close" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="field">
+        <label class="field-label"><i class="bi bi-lock-fill"></i> Senha atual</label>
+        <div class="input-eye">
+          <input id="cp-current" type="password" placeholder="••••••••" />
+          <button type="button" class="eye-btn" onclick="cpToggleEye('cp-current', this)">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label"><i class="bi bi-lock-fill"></i> Nova senha</label>
+        <div class="input-eye">
+          <input id="cp-new" type="password" placeholder="Mínimo 8 caracteres" />
+          <button type="button" class="eye-btn" onclick="cpToggleEye('cp-new', this)">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="pwd-strength" id="cp-strength">
+        <div class="strength-bar"><div class="strength-fill" id="cp-strength-fill"></div></div>
+        <ul class="strength-rules">
+          <li id="cp-rule-len">  <i class="bi bi-x-circle-fill"></i> Mínimo 8 caracteres</li>
+          <li id="cp-rule-upper"><i class="bi bi-x-circle-fill"></i> Uma maiúscula</li>
+          <li id="cp-rule-lower"><i class="bi bi-x-circle-fill"></i> Uma minúscula</li>
+          <li id="cp-rule-num">  <i class="bi bi-x-circle-fill"></i> Um número</li>
+          <li id="cp-rule-spec"> <i class="bi bi-x-circle-fill"></i> Um caractere especial</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <label class="field-label"><i class="bi bi-lock-fill"></i> Confirmar nova senha</label>
+        <div class="input-eye">
+          <input id="cp-confirm" type="password" placeholder="Repita a nova senha" />
+          <button type="button" class="eye-btn" onclick="cpToggleEye('cp-confirm', this)">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="cp-error"   class="modal-msg modal-error   hidden"></div>
+      <div id="cp-success" class="modal-msg modal-success hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </button>
+        <button class="btn btn-primary" id="btn-cp-save">
+          <i class="bi bi-check-lg"></i> Salvar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TELA DE LOGOUT ───────────────────────────────────── -->
+  <div id="logout-screen" class="logout-screen hidden">
+    <div class="logout-dragon"></div>
+    <div class="logout-text">
+      <p class="logout-bye">Até logo...</p>
+      <p class="logout-sub">Saindo do sistema</p>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox" class="lightbox hidden" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightbox()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <div class="lightbox-hint">Clique fora para fechar &nbsp;·&nbsp; Scroll para zoom</div>
+    <img id="lightbox-img" src="" alt="Imagem expandida" />
+  </div>
+
+  <!-- MODAL: GRAD-CAM EM LOTE -->
+  <div id="modal-batch-gradcam" class="modal-overlay hidden" onclick="if(event.target===this)closeBatchGradCAMModal()">
+    <div class="modal-box" style="max-width:580px;width:95%">
+      <div class="modal-header">
+        <h3><i class="bi bi-eye-fill" style="color:var(--accent)"></i> Análise Visual — Grad-CAM</h3>
+        <button class="modal-close" onclick="closeBatchGradCAMModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="bgcam-filename" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;word-break:break-all"></div>
+      <div id="bgcam-loading" style="text-align:center;padding:28px 0"><span class="spinner"></span><br><span style="font-size:13px;color:var(--text-muted)">Gerando mapa de atenção CNN...</span></div>
+      <div id="bgcam-error" class="hidden" style="color:var(--error);padding:10px;font-size:13px"></div>
+      <div id="bgcam-result" class="hidden" style="text-align:center">
+        <img id="bgcam-img" src="" alt="Grad-CAM" style="max-width:100%;border-radius:8px;cursor:zoom-in" onclick="openLightbox(this.src,'Grad-CAM')" />
+        <div id="bgcam-pred" style="margin-top:10px;font-size:13px;color:var(--text-muted)"></div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">Regiões quentes = onde a CNN focou para decidir &nbsp;·&nbsp; Clique na imagem para ampliar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RENOMEAR SESSÃO -->
+  <div id="modal-rename-session" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:440px">
+      <div class="modal-header">
+        <h3><i class="bi bi-pencil-fill"></i> Renomear Sessão</h3>
+        <button class="modal-close" onclick="closeRenameModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px" id="rename-session-subtitle"></p>
+      <div class="field">
+        <label class="field-label">Novo nome</label>
+        <input id="rename-session-input" type="text" placeholder="Ex: Teste com radiografias — base UCI" maxlength="200" />
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:6px">Deixe vazio para remover o nome.</p>
+      <div id="rename-session-error" class="modal-msg modal-error hidden"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeRenameModal()">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </button>
+        <button class="btn btn-primary" id="btn-rename-save">
+          <i class="bi bi-check-lg"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALHE DO LOG -->
+  <div id="modal-log-detail" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:700px;width:95%">
+      <div class="modal-header">
+        <h3><i class="bi bi-exclamation-triangle-fill"></i> Detalhes do Erro</h3>
+        <button class="modal-close" onclick="closeLogModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="log-detail-content"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMAR EXCLUSÃO DE SESSÃO -->
+  <div id="modal-delete-session" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-header">
+        <h3><i class="bi bi-trash-fill" style="color:var(--error)"></i> Excluir Sessão</h3>
+        <button class="modal-close" onclick="closeDeleteModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <p id="modal-delete-msg" style="margin-bottom:10px"></p>
+      <p style="font-size:12px;color:var(--text-muted)">Esta ação remove todas as predições associadas e não pode ser desfeita.</p>
+      <div class="modal-actions" style="margin-top:20px">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </button>
+        <button class="btn btn-danger" id="btn-delete-confirm">
+          <i class="bi bi-trash-fill"></i> Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="js/main.js"></script>
+</body>
+</html>

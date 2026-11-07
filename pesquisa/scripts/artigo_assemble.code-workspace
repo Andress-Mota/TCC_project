@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"name": "artigo_assemble",
+			"path": "../../artigo_assemble"
+		},
+		{
+			"name": ".venv",
+			"path": "../.venv"
+		},
+		{
+			"name": "codigo",
+			"path": "."
+		},
+		{
+			"name": "referencias",
+			"path": "../referencias"
+		},
+		{
+			"name": "artigos_relatorios",
+			"path": "../artigos_relatorios"
+		}
+	],
+	"settings": {}
+}

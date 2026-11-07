@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TCC IA — Acesso</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/auth.css?v=7" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === null) document.documentElement.classList.add('light');
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="auth-bg">
+
+    <!-- PAINEL ESQUERDO: DRAGÃO -->
+    <div class="auth-dragon">
+      <div class="auth-dragon-overlay">
+        <div class="auth-dragon-text">
+          <h1>TCC <span>IA</span></h1>
+          <p>Classificação de Imagens<br>com Ensemble Learning</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL DIREITO: FORMULÁRIO -->
+    <div class="auth-panel">
+    <div class="auth-card">
+
+      <!-- LOGO -->
+      <div class="auth-logo">
+        <i class="bi bi-cpu-fill"></i>
+        <span>TCC <strong>IA</strong></span>
+      </div>
+
+      <!-- ── LOGIN ─────────────────────────────────────── -->
+      <div id="view-login" class="auth-view active">
+        <h2>Entrar na conta</h2>
+        <p class="auth-sub">Bem-vindo de volta</p>
+
+        <div class="field">
+          <label><i class="bi bi-envelope-fill"></i> E-mail</label>
+          <input id="login-email" type="email" placeholder="seu@email.com" />
+        </div>
+        <div class="field">
+          <label><i class="bi bi-lock-fill"></i> Senha</label>
+          <div class="input-eye">
+            <input id="login-password" type="password" placeholder="••••••••" />
+            <button type="button" class="eye-btn" onclick="toggleEye('login-password', this)">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-error" class="msg-error hidden"></div>
+
+        <button class="btn-auth" id="btn-login">
+          <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </button>
+
+        <div class="auth-links">
+          <button onclick="goView('view-forgot')">Esqueci minha senha</button>
+          <span>·</span>
+          <button onclick="goView('view-register')">Criar conta</button>
+        </div>
+      </div>
+
+      <!-- ── CADASTRO ───────────────────────────────────── -->
+      <div id="view-register" class="auth-view">
+        <h2>Criar conta</h2>
+        <p class="auth-sub">Preencha seus dados para começar</p>
+
+        <div class="field">
+          <label><i class="bi bi-person-fill"></i> Nome</label>
+          <input id="reg-name" type="text" placeholder="Seu nome completo" />
+        </div>
+        <div class="field">
+          <label><i class="bi bi-envelope-fill"></i> E-mail</label>
+          <input id="reg-email" type="email" placeholder="seu@email.com" />
+        </div>
+        <div class="field">
+          <label><i class="bi bi-lock-fill"></i> Senha</label>
+          <div class="input-eye">
+            <input id="reg-password" type="password" placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="eye-btn" onclick="toggleEye('reg-password', this)">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label><i class="bi bi-lock-fill"></i> Confirmar senha</label>
+          <div class="input-eye">
+            <input id="reg-confirm" type="password" placeholder="Repita a senha" />
+            <button type="button" class="eye-btn" onclick="toggleEye('reg-confirm', this)">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="pwd-strength" id="pwd-strength">
+          <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+          <ul class="strength-rules" id="strength-rules">
+            <li id="rule-len">  <i class="bi bi-x-circle-fill"></i> Mínimo 8 caracteres</li>
+            <li id="rule-upper"><i class="bi bi-x-circle-fill"></i> Uma letra maiúscula</li>
+            <li id="rule-lower"><i class="bi bi-x-circle-fill"></i> Uma letra minúscula</li>
+            <li id="rule-num">  <i class="bi bi-x-circle-fill"></i> Um número</li>
+            <li id="rule-spec"> <i class="bi bi-x-circle-fill"></i> Um caractere especial</li>
+          </ul>
+        </div>
+
+        <div id="reg-error" class="msg-error hidden"></div>
+        <div id="reg-success" class="msg-success hidden"></div>
+
+        <button class="btn-auth" id="btn-register">
+          <i class="bi bi-person-plus-fill"></i> Cadastrar
+        </button>
+
+        <div class="auth-links">
+          <button onclick="goView('view-login')">
+            <i class="bi bi-arrow-left"></i> Já tenho conta
+          </button>
+        </div>
+      </div>
+
+      <!-- ── VERIFICAÇÃO DE E-MAIL ──────────────────────────── -->
+      <div id="view-verify" class="auth-view">
+        <h2>Verificar e-mail</h2>
+        <p class="auth-sub">Um código de 6 dígitos foi enviado para o seu e-mail. Insira-o abaixo para ativar sua conta.</p>
+
+        <div class="field">
+          <label><i class="bi bi-shield-lock-fill"></i> Código de verificação</label>
+          <input id="verify-code-input" type="text" placeholder="000000" maxlength="6" />
+        </div>
+
+        <div id="verify-error"   class="msg-error   hidden"></div>
+        <div id="verify-success" class="msg-success hidden"></div>
+
+        <button class="btn-auth" id="btn-verify">
+          <i class="bi bi-check-circle-fill"></i> Verificar e-mail
+        </button>
+
+        <div class="auth-links">
+          <span style="color:var(--muted);font-size:13px">Não recebeu?</span>
+          <button id="btn-resend" onclick="resendCode()">
+            <i class="bi bi-arrow-repeat"></i> Reenviar código
+          </button>
+        </div>
+      </div>
+
+      <!-- ── RECUPERAR SENHA ─────────────────────────────── -->
+      <div id="view-forgot" class="auth-view">
+        <h2>Recuperar senha</h2>
+        <p class="auth-sub">Informe seu e-mail para gerar o token de recuperação</p>
+
+        <div class="field">
+          <label><i class="bi bi-envelope-fill"></i> E-mail cadastrado</label>
+          <input id="forgot-email" type="email" placeholder="seu@email.com" />
+        </div>
+
+        <div id="forgot-error" class="msg-error hidden"></div>
+
+        <div id="forgot-token-box" class="token-box hidden">
+          <p style="color:var(--success);font-weight:700;font-size:14px;margin-bottom:12px">
+            <i class="bi bi-envelope-check-fill"></i> Token enviado para seu e-mail!
+          </p>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">
+            Verifique sua caixa de entrada e cole o token na próxima tela.
+          </p>
+          <button class="btn-auth" onclick="goView('view-reset')">
+            Redefinir senha <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+
+        <button class="btn-auth" id="btn-forgot" style="margin-top:4px">
+          <i class="bi bi-send-fill"></i> Gerar token
+        </button>
+
+        <div class="auth-links">
+          <button onclick="goView('view-login')">
+            <i class="bi bi-arrow-left"></i> Voltar ao login
+          </button>
+        </div>
+      </div>
+
+      <!-- ── REDEFINIR SENHA ─────────────────────────────── -->
+      <div id="view-reset" class="auth-view">
+        <h2>Nova senha</h2>
+        <p class="auth-sub">Cole o token recebido e defina uma nova senha</p>
+
+        <div class="field">
+          <label><i class="bi bi-key-fill"></i> Token de recuperação</label>
+          <input id="reset-token" type="text" placeholder="Cole o token aqui" />
+        </div>
+        <div class="field">
+          <label><i class="bi bi-lock-fill"></i> Nova senha</label>
+          <div class="input-eye">
+            <input id="reset-password" type="password" placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="eye-btn" onclick="toggleEye('reset-password', this)">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label><i class="bi bi-lock-fill"></i> Confirmar nova senha</label>
+          <div class="input-eye">
+            <input id="reset-confirm" type="password" placeholder="Repita a nova senha" />
+            <button type="button" class="eye-btn" onclick="toggleEye('reset-confirm', this)">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="reset-error"   class="msg-error   hidden"></div>
+        <div id="reset-success" class="msg-success hidden"></div>
+
+        <button class="btn-auth" id="btn-reset">
+          <i class="bi bi-check-circle-fill"></i> Redefinir senha
+        </button>
+
+        <div class="auth-links">
+          <button onclick="goView('view-login')">
+            <i class="bi bi-arrow-left"></i> Voltar ao login
+          </button>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- auth-panel -->
+  </div>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>

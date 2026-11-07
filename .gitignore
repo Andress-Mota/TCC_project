@@ -1,0 +1,16 @@
+# Ambiente / segredos
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Modelos treinados e uploads (pesados, gerados em runtime)
+backend/models/*.pkl
+backend/models/*.pt
+backend/uploads/*
+
+# Datasets
+dados/*
+
+# Editor
+.vscode/

@@ -1,0 +1,13 @@
+flask
+flask-cors
+flask-limiter
+mysql-connector-python
+scikit-learn
+opencv-python
+numpy
+scikit-image
+Pillow
+python-dotenv
+waitress
+torch
+torchvision

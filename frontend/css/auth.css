@@ -1,0 +1,356 @@
+/* ── TEMA ─────────────────────────────────────────────────── */
+:root {
+  --bg:       #0B1020;
+  --surface:  #121A2F;
+  --surface2: #1A2440;
+  --border:   #243055;
+  --accent:   #5B8CFF;
+  --accent2:  #7AA2FF;
+  --gold:     #D9B66B;
+  --success:  #39C6B4;
+  --error:    #FF7A59;
+  --text:     #E8ECF3;
+  --muted:    #9BA7C2;
+  --radius:   14px;
+  --shadow:   0 8px 40px rgba(0,0,0,.5);
+}
+
+html.light {
+  --bg:      #E8EDF8;
+  --surface: #FFFFFF;
+  --surface2:#F0F4FF;
+  --border:  #C4CFEB;
+  --accent:  #4A7AEF;
+  --accent2: #6B96FF;
+  --gold:    #B8922A;
+  --success: #28A99A;
+  --error:   #E05A35;
+  --text:    #0B1020;
+  --muted:   #5A6880;
+  --shadow:  0 8px 40px rgba(0,0,0,.12);
+}
+
+/* ── RESET ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background .3s;
+}
+
+/* ── BACKGROUND / LAYOUT ──────────────────────────────────── */
+.auth-bg {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── PAINEL DRAGÃO (esquerda) ─────────────────────────────── */
+.auth-dragon {
+  flex: 1;
+  position: relative;
+  background: url('../img/dragon.png') center center / contain no-repeat, #0B1020;
+}
+
+.auth-dragon::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 140px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none;
+}
+
+.auth-dragon-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(11,16,32,.5) 0%, rgba(11,16,32,.15) 55%, rgba(11,16,32,.65) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 48px;
+  z-index: 1;
+}
+
+.auth-dragon-text { position: relative; z-index: 2; }
+
+.auth-dragon-text h1 {
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1px;
+  line-height: 1;
+  text-shadow: 0 2px 24px rgba(0,0,0,.7);
+}
+.auth-dragon-text h1 span { color: var(--gold); }
+.auth-dragon-text p {
+  margin-top: 10px;
+  font-size: 16px;
+  color: rgba(255,255,255,.78);
+  line-height: 1.6;
+  text-shadow: 0 1px 10px rgba(0,0,0,.6);
+}
+
+/* ── PAINEL FORMULÁRIO (direita) ──────────────────────────── */
+.auth-panel {
+  width: 460px;
+  flex-shrink: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px;
+  position: relative;
+  background: url('../img/portal.png') center center / cover no-repeat, var(--bg);
+}
+
+.auth-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 16, 32, 0.55);
+  pointer-events: none;
+}
+
+html.light .auth-panel::before {
+  background: rgba(240, 244, 255, 0.72);
+}
+
+.auth-panel > * { position: relative; z-index: 1; }
+
+/* ── CARD ─────────────────────────────────────────────────── */
+.auth-card {
+  width: 100%;
+  max-width: 416px;
+  background: rgba(18, 26, 47, 0.28);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 40px 36px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.25);
+}
+
+html.light .auth-card {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 40px rgba(0,0,0,.08);
+}
+
+/* ── RESPONSIVO ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .auth-dragon { display: none; }
+  .auth-panel  { width: 100%; min-height: 100vh; padding: 32px 16px; }
+  .auth-card   { padding: 28px 20px; }
+}
+
+/* ── LOGO ─────────────────────────────────────────────────── */
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.auth-logo i {
+  font-size: 26px;
+  color: var(--accent);
+  background: rgba(91,140,255,.15);
+  padding: 8px;
+  border-radius: 10px;
+}
+.auth-logo strong { color: var(--gold); }
+
+/* ── VIEWS ────────────────────────────────────────────────── */
+.auth-view         { display: none; }
+.auth-view.active  { display: block; }
+
+.auth-view h2 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: -.4px;
+}
+.auth-sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* ── FIELD ────────────────────────────────────────────────── */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 6px;
+}
+.field label i { margin-right: 4px; }
+
+.field input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+.field input:focus { border-color: var(--accent); }
+
+.input-eye {
+  position: relative;
+}
+.input-eye input { padding-right: 42px; }
+.eye-btn {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+.eye-btn:hover { color: var(--text); }
+
+/* ── BOTÃO PRINCIPAL ──────────────────────────────────────── */
+.btn-auth {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(91,140,255,.35);
+  transition: opacity .2s, transform .1s;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-auth:hover   { opacity: .88; transform: translateY(-1px); }
+.btn-auth:active  { transform: translateY(0); }
+.btn-auth:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── LINKS ────────────────────────────────────────────────── */
+.auth-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  font-size: 13px;
+}
+.auth-links button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.auth-links button:hover { text-decoration: underline; }
+.auth-links span { color: var(--muted); }
+
+/* ── MENSAGENS ────────────────────────────────────────────── */
+.msg-error, .msg-success {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.msg-error   { background: rgba(255,122,89,.15); color: var(--error);   border: 1px solid rgba(255,122,89,.3); }
+.msg-success { background: rgba(57,198,180,.15); color: var(--success); border: 1px solid rgba(57,198,180,.3); }
+
+/* ── TOKEN BOX ────────────────────────────────────────────── */
+.token-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.token-box p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.token-value {
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: 6px;
+  letter-spacing: .05em;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+.btn-copy {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color .2s;
+}
+.btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── FORÇA DA SENHA ───────────────────────────────────────── */
+.pwd-strength { margin-bottom: 14px; }
+
+.strength-bar {
+  height: 5px;
+  background: var(--surface2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.strength-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  transition: width .3s, background .3s;
+}
+
+.strength-rules {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+.strength-rules li {
+  font-size: 11px;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color .2s;
+}
+.strength-rules li.ok {
+  color: var(--success);
+}
+.strength-rules li i { font-size: 11px; }
+
+/* ── UTILITY ──────────────────────────────────────────────── */
+.hidden { display: none !important; }
