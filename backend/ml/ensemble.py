@@ -104,7 +104,10 @@ def _compute_roc(modelo, X_test, y_test, classes):
 
 
 def train_and_evaluate(X, y, optimize_k=True, callback=None):
-    classes_list = sorted(list(set(y)))
+    # set(y) sobre um array numpy produz numpy.int64, que json.dumps não
+    # serializa (isso só aparece com >2 classes, onde classes_list acaba em
+    # roc_data). Convertendo para int nativo do Python.
+    classes_list = sorted(int(c) for c in set(y))
     log.info("=== TREINAMENTO E AVALIAÇÃO ===")
     log.info(f"Amostras: {len(X)} | Classes: {len(classes_list)} | Features HOG: {X.shape[1]}")
 
